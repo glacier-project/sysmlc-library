@@ -1,0 +1,69 @@
+[project]
+name = "sysmlc-library"
+dynamic = ["version"]
+description = "SysML v2 and KerML libraries for sysmlc"
+authors = [{ name = "The Glacier Project contributors" }]
+requires-python = ">=3.12,<4"
+readme = "README.md"
+license = "BSD-2-Clause"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.2,<10",
+    "ruff>=0.15.13,<0.16",
+    "pyrefly>=1.0.0",
+    "syside>=0.11.0,<0.12",
+]
+
+[project.entry-points."sysmlc.libraries"]
+sysmlc_library = "sysmlc_library:library_files"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "sysmlc_library/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sysmlc_library"]
+
+[tool.pyrefly]
+python-version = "3.12.0"
+preset = "legacy"
+check-unannotated-defs = true
+infer-return-types = "never"
+project-includes = ["sysmlc_library", "tests"]
+
+[tool.pyrefly.errors]
+implicit-any = "error"
+implicit-any-parameter = "error"
+missing-import = "error"
+redundant-cast = "error"
+redundant-condition = "error"
+unannotated-return = "error"
+unnecessary-comparison = "error"
+unreachable = "error"
+unused-ignore = "error"
+untyped-import = "error"
+
+[tool.ruff]
+line-length = 80
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "D", "UP", "B", "C4", "SIM", "TCH", "TID252", "RUF"]
+ignore = ["E501", "D100", "D104", "D105", "D107", "D203", "D213"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["sysmlc_library"]
