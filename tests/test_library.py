@@ -63,16 +63,48 @@ def test_ranges_match_the_documented_table() -> None:
     assert ranges == EXPECTED
 
 
+@needs_license
+def test_integers_fit_in_signed_64_bits() -> None:
+    """Tools that read Syside's JSON (such as the visualizer) reject larger ones."""
+    import json
+
+    import syside
+
+    model, _ = syside.try_load_model(paths=library_files())
+    options = syside.SerializationOptions.minimal()
+    for document in model.documents:
+        with document.lock() as root:
+            exported = json.loads(syside.json.dumps(root.root_node, options))
+        too_big = [n for n in _integers(exported) if not -(2**63) <= n < 2**63]
+        assert too_big == []
+
+
+def _integers(value: object) -> list[int]:
+    if isinstance(value, bool):
+        return []
+    if isinstance(value, int):
+        return [value]
+    if isinstance(value, dict):
+        value = list(value.values())
+    if isinstance(value, list):
+        return [n for item in value for n in _integers(item)]
+    return []
+
+
 def _integer_bound(expr: object) -> int:
-    """Read an exact integer literal, handling unary minus."""
+    """Evaluate an integer bound: a literal, or literals joined by + - *."""
     import syside
 
     if isinstance(expr, syside.LiteralInteger):
         return expr.value
     assert isinstance(expr, syside.OperatorExpression)
-    assert expr.operator == syside.Operator.Minus
-    (operand,) = expr.operands.collect()
-    return -_integer_bound(operand)
+    operands = [_integer_bound(o) for o in expr.operands.collect()]
+    if expr.operator == syside.Operator.Minus:
+        return -operands[0] if len(operands) == 1 else operands[0] - operands[1]
+    if expr.operator == syside.Operator.Plus:
+        return operands[0] + operands[1]
+    assert expr.operator == syside.Operator.Multiply
+    return operands[0] * operands[1]
 
 
 def _collect_bounds(expr: object, bounds: dict[str, int]) -> None:

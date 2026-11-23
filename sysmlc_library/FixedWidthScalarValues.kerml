@@ -20,7 +20,9 @@ library package FixedWidthScalarValues {
 
     feature int64 : Integer[1] {
         doc /* Signed 64-bit integer. */
-        inv int64Range { that >= -9223372036854775808 and that <= 9223372036854775807 }
+        // -2^63 and 2^64 - 1 do not fit in a signed 64-bit literal, which some tools reject,
+        // so they are written as sums.
+        inv int64Range { that >= -9223372036854775807 - 1 and that <= 9223372036854775807 }
     }
 
     feature uint8 : Natural[1] {
@@ -40,7 +42,7 @@ library package FixedWidthScalarValues {
 
     feature uint64 : Natural[1] {
         doc /* Unsigned 64-bit integer. */
-        inv uint64Range { that <= 18446744073709551615 }
+        inv uint64Range { that <= 2 * 9223372036854775807 + 1 }
     }
 
     feature float32 : Real[1] {
